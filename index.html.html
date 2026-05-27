@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YTF — The Boardgame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Archivo+Black&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* === OFFICIAL YTF BRAND PALETTE === */
+    /* Primary */
+    --lavender-core: #A88BCB;
+    --slate-purple:  #8262A8;
+    --lilac-mist:    #E2D6ED;
+    --soft-cream:    #FFF8E3;
+
+    /* Secondary */
+    --warm-apricot:  #FFD3A5;
+    --olive-green:   #96B07A;
+    --dusty-rose:    #D8A7B1;
+    --peach-coral:   #F9B3A9;
+    --golden-peach:  #F5B16A;
+    --vivid-lavender:#8B2FFF;
+
+    /* Neutrals */
+    --charcoal:      #333333;
+    --graphite:      #666666;
+    --blush-beige:   #FFFAED;
+
+    /* TechDay accent (event-specific) */
+    --sky-blue:      #C6D8F2;
+
+    /* Semantic mappings used throughout the game */
+    --bg:        var(--soft-cream);
+    --paper:     var(--blush-beige);
+    --ink:       var(--charcoal);
+    --ink-soft:  var(--graphite);
+    --muted:     #888;
+
+    --primary:   var(--slate-purple);
+    --accent:    var(--vivid-lavender);
+    --highlight: var(--lavender-core);
+
+    /* Category tints (soft fills for tiles) */
+    --tint-origin:   var(--warm-apricot);
+    --tint-theme:    var(--sky-blue);
+    --tint-speaker:  var(--lilac-mist);
+    --tint-people:   #c8d8b3;          /* lightened olive */
+    --tint-partner:  var(--golden-peach);
+    --tint-wildcard: var(--peach-coral);
+
+    --shadow: rgba(51, 51, 51, 0.14);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Manrope', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(139, 47, 255, 0.05) 0px, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(168, 139, 203, 0.08) 0px, transparent 50%);
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+    z-index: 1;
+  }
+  /* HEADER */
+  header {
+    padding: 32px 5vw 16px;
+    position: relative; z-index: 2;
+    display: flex; align-items: end; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+    border-bottom: 2px dashed var(--ink);
+    margin: 0 5vw;
+  }
+  .title-block { max-width: 720px; }
+  .eyebrow {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--vivid-lavender);
+    font-weight: 600; margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Archivo Black', 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: clamp(44px, 7vw, 88px);
+    line-height: 0.92; letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--slate-purple);
+  }
+  h1 .alt { color: var(--vivid-lavender); }
+  .subtitle {
+    margin-top: 16px;
+    font-size: 15px; max-width: 540px;
+    line-height: 1.55; color: var(--graphite);
+    font-weight: 500;
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px; letter-spacing: 0.05em;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 8px;
+    background: var(--paper);
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+  }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.2); }
+
+  /* MAIN GRID */
+  main {
+    padding: 24px 5vw 80px;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    position: relative; z-index: 2;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  /* BOARD */
+  .board-wrap {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 8px 8px 0 var(--ink);
+    position: relative;
+  }
+  .board-wrap::before {
+    content: 'PLAY · PLAY · PLAY · PLAY · PLAY · PLAY · PLAY · PLAY · PLAY · PLAY';
+    position: absolute;
+    top: -12px; left: 24px;
+    background: var(--paper);
+    padding: 0 8px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px; letter-spacing: 0.3em;
+    color: var(--ink);
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+  }
+  .tile {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 2px solid var(--ink);
+    padding: 6px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: space-between;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    cursor: default;
+    position: relative;
+    transition: transform 0.15s ease;
+    overflow: hidden;
+  }
+  .tile:hover { transform: translateY(-2px) rotate(-1deg); }
+  .tile-num {
+    font-size: 9px; opacity: 0.65;
+    align-self: flex-start;
+  }
+  .tile-icon { font-size: 22px; line-height: 1; }
+  .tile-label {
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    font-weight: 600;
+  }
+  .tile.cat-origin { background: var(--tint-origin); }
+  .tile.cat-theme { background: var(--tint-theme); }
+  .tile.cat-speaker { background: var(--tint-speaker); }
+  .tile.cat-people { background: var(--tint-people); }
+  .tile.cat-partner { background: var(--tint-partner); }
+  .tile.cat-wildcard { background: var(--tint-wildcard); }
+  .tile.cat-start, .tile.cat-finish {
+    background: var(--ink); color: var(--paper);
+  }
+  .tile.cat-start .tile-num, .tile.cat-finish .tile-num { color: var(--paper); }
+  .tile.cat-special {
+    background: var(--bg);
+    border-style: dashed;
+  }
+  .tile-active {
+    box-shadow: 0 0 0 3px var(--vivid-lavender), 0 0 20px rgba(139, 47, 255, 0.45);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  .pawns {
+    position: absolute;
+    bottom: 2px; right: 2px;
+    display: flex; flex-wrap: wrap-reverse;
+    gap: 2px;
+    max-width: 80%;
+  }
+  .pawn {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    font-size: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* SIDE PANEL */
+  .panel {
+    display: flex; flex-direction: column;
+    gap: 16px;
+    position: sticky; top: 16px;
+    align-self: start;
+  }
+  .panel-card {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+  .panel-card h2 {
+    font-family: 'Archivo Black', 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--slate-purple);
+    margin-bottom: 12px;
+  }
+  .panel-card h3 {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: var(--graphite);
+  }
+  /* PLAYER SETUP */
+  .player-setup label {
+    display: block; font-size: 11px;
+    margin-bottom: 4px; letter-spacing: 0.05em;
+  }
+  .player-setup input {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .color-pick {
+    display: flex; gap: 6px; margin-bottom: 12px;
+  }
+  .color-pick button {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .color-pick button.selected { transform: scale(1.2); box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+  button {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    width: 100%;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 3px 3px 0 var(--vivid-lavender);
+  }
+  .btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--vivid-lavender); }
+  .btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--vivid-lavender); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--paper); color: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .btn-secondary:hover { background: var(--bg); }
+  .player-list {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 12px;
+  }
+  .player-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1.5px solid var(--ink);
+    font-size: 12px;
+  }
+  .player-chip .dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+  }
+  .player-chip.is-active {
+    background: #fef9c3;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .player-chip .score { margin-left: auto; font-weight: 700; }
+  .player-chip .remove {
+    background: none; border: none; cursor: pointer;
+    font-size: 14px; padding: 0 4px; color: #aaa;
+  }
+  .player-chip .remove:hover { color: #c14b3e; }
+
+  /* DICE */
+  .dice-area {
+    text-align: center;
+    padding: 16px 0;
+  }
+  .dice {
+    width: 80px; height: 80px;
+    margin: 0 auto 16px;
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Manrope', sans-serif;
+    font-size: 48px; font-weight: 600;
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.3s;
+  }
+  .dice.rolling { animation: roll 0.6s ease-in-out; }
+  @keyframes roll {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(180deg) scale(1.1); }
+    50% { transform: rotate(360deg) scale(0.9); }
+    75% { transform: rotate(540deg) scale(1.1); }
+    100% { transform: rotate(720deg) scale(1); }
+  }
+  .turn-info {
+    font-size: 11px; color: var(--graphite);
+    margin-top: 8px; min-height: 16px;
+  }
+  .now-playing {
+    font-family: 'Archivo Black', 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 30px;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  /* CARD MODAL */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(26, 26, 26, 0.55);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-backdrop.active { display: flex; }
+  .card {
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 540px;
+    width: 100%;
+    box-shadow: 12px 12px 0 var(--ink);
+    transform: rotate(-1deg);
+    animation: cardIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  @keyframes cardIn {
+    0% { transform: rotate(-8deg) scale(0.7); opacity: 0; }
+    100% { transform: rotate(-1deg) scale(1); opacity: 1; }
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 12px; right: 12px; bottom: 12px; left: 12px;
+    border: 1.5px dashed var(--ink);
+    border-radius: 14px;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+  .card-category {
+    font-family: 'Manrope', sans-serif;
+    font-size: 10px; letter-spacing: 0.25em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1.5px solid var(--ink);
+  }
+  .card-question {
+    font-family: 'Archivo', 'Manrope', sans-serif;
+    font-size: 26px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 16px 0 24px;
+    font-weight: 800;
+    color: var(--slate-purple);
+  }
+  .card-answers {
+    display: flex; flex-direction: column; gap: 8px;
+    margin-bottom: 16px;
+  }
+  .answer-btn {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .answer-btn:hover:not(:disabled) {
+    background: var(--bg);
+    transform: translateX(4px);
+    border-color: var(--vivid-lavender);
+  }
+  .answer-btn .letter {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--vivid-lavender);
+    min-width: 18px;
+  }
+  .answer-btn.correct { background: #d1fae5; border-color: #059669; }
+  .answer-btn.wrong { background: #fee2e2; border-color: #dc2626; }
+  .answer-btn:disabled { cursor: default; }
+  .answer-btn.correct .letter, .answer-btn.wrong .letter { color: var(--ink); }
+  .card-feedback {
+    font-family: 'Manrope', sans-serif;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.01em;
+    text-align: center;
+    margin: 12px 0;
+    min-height: 30px;
+  }
+  .card-source {
+    font-size: 10px; color: var(--graphite);
+    border-top: 1px dashed #999;
+    padding-top: 10px;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .card-close {
+    background: var(--ink); color: var(--paper);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  /* WIN MODAL */
+  .win-banner {
+    text-align: center; padding: 20px 0;
+  }
+  .win-banner h2 {
+    font-family: 'Archivo Black', 'Archivo', sans-serif;
+    font-weight: 900;
+    font-size: 52px;
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--vivid-lavender);
+    margin-bottom: 8px;
+  }
+  .confetti {
+    font-size: 32px;
+    margin: 8px 0;
+  }
+
+  /* LEADERBOARD */
+  .lb-empty {
+    font-size: 12px;
+    color: var(--graphite);
+    padding: 12px 8px;
+    text-align: center;
+    border: 1.5px dashed var(--lavender-core);
+    border-radius: 8px;
+    background: rgba(168, 139, 203, 0.08);
+  }
+  .lb-list {
+    display: flex; flex-direction: column;
+    gap: 4px;
+  }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    font-size: 12px;
+    transition: transform 0.15s;
+  }
+  .lb-row:hover { transform: translateX(2px); }
+  .lb-row.lb-rank-1 {
+    background: linear-gradient(90deg, #fff4cc 0%, var(--paper) 60%);
+    border-color: #d4a017;
+  }
+  .lb-row.lb-rank-2 {
+    background: linear-gradient(90deg, #ececec 0%, var(--paper) 60%);
+    border-color: #999;
+  }
+  .lb-row.lb-rank-3 {
+    background: linear-gradient(90deg, #f5d8c1 0%, var(--paper) 60%);
+    border-color: #b87333;
+  }
+  .lb-rank {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px;
+    text-align: center;
+    line-height: 1;
+  }
+  .lb-name {
+    font-weight: 700;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .lb-stats {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    color: var(--graphite);
+    text-align: right;
+    line-height: 1.2;
+  }
+  .lb-stats .lb-wins {
+    display: block;
+    font-weight: 800;
+    color: var(--slate-purple);
+    font-size: 13px;
+  }
+  .lb-row.lb-just-played {
+    box-shadow: 0 0 0 2px var(--vivid-lavender), 4px 4px 0 var(--vivid-lavender);
+    animation: lbPulse 0.6s ease;
+  }
+  @keyframes lbPulse {
+    0% { transform: scale(0.96); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  /* RULES */
+  .rules { font-size: 12px; line-height: 1.6; color: var(--graphite); }
+  .rules ol { padding-left: 18px; }
+  .rules li { margin-bottom: 6px; }
+  .rules strong { color: var(--ink); }
+
+  /* DECORATIVE STARBURSTS — YTF "crayon" graphic language */
+  .starburst {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .starburst svg { width: 100%; height: 100%; display: block; }
+  .starburst--header-r {
+    width: 140px; height: 140px;
+    top: 12px; right: 0;
+  }
+  .starburst--header-r2 {
+    width: 80px; height: 80px;
+    top: 80px; right: 150px;
+    opacity: 0.7;
+  }
+  @media (max-width: 800px) {
+    .starburst--header-r, .starburst--header-r2 { display: none; }
+  }
+
+  header { position: relative; }
+  .title-block { position: relative; z-index: 1; }
+
+  /* Crayon underline scribble under h1 .alt */
+  .scribble {
+    display: inline-block;
+    height: 14px;
+    width: 100%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 14'><path d='M2 8 Q15 2, 30 7 T 60 6 T 90 8 T 120 5 T 150 7 T 180 6 T 198 8' stroke='%238B2FFF' stroke-width='3' fill='none' stroke-linecap='round'/></svg>");
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    margin-top: -4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-block">
+    <div class="eyebrow">A Trivia Boardgame · Youth Tech Forum</div>
+    <h1>YOUTH<br>TECH<br><span class="alt">BOARDGAME</span></h1>
+    <div class="scribble" style="max-width: 380px;"></div>
+    <p class="subtitle">
+      Roll the dice, race around the board, and prove who knows the most about
+      CBS TechDay, Niels Brock TechDay, and Youth Tech Forum.
+      Every tile draws a card. Every card is a real piece of YTF history.
+    </p>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="swatch" style="background:var(--tint-origin)"></div>Origins</div>
+    <div class="legend-item"><div class="swatch" style="background:var(--tint-theme)"></div>Themes</div>
+    <div class="legend-item"><div class="swatch" style="background:var(--tint-speaker)"></div>Speakers</div>
+    <div class="legend-item"><div class="swatch" style="background:var(--tint-people)"></div>People</div>
+    <div class="legend-item"><div class="swatch" style="background:var(--tint-partner)"></div>Partners</div>
+    <div class="legend-item"><div class="swatch" style="background:var(--tint-wildcard)"></div>Wildcard</div>
+  </div>
+
+  <!-- YTF brand starburst decorations -->
+  <div class="starburst starburst--header-r" aria-hidden="true">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#96B07A" stroke-width="2.5" stroke-linecap="round">
+        <line x1="50" y1="8" x2="50" y2="30"/>
+        <line x1="50" y1="70" x2="50" y2="92"/>
+        <line x1="8" y1="50" x2="30" y2="50"/>
+        <line x1="70" y1="50" x2="92" y2="50"/>
+        <line x1="20" y1="20" x2="35" y2="35"/>
+        <line x1="65" y1="65" x2="80" y2="80"/>
+        <line x1="80" y1="20" x2="65" y2="35"/>
+        <line x1="20" y1="80" x2="35" y2="65"/>
+        <line x1="50" y1="14" x2="50" y2="32" opacity="0.5"/>
+        <line x1="14" y1="35" x2="32" y2="42" opacity="0.5"/>
+        <line x1="86" y1="35" x2="68" y2="42" opacity="0.5"/>
+        <line x1="35" y1="14" x2="42" y2="32" opacity="0.5"/>
+        <line x1="65" y1="14" x2="58" y2="32" opacity="0.5"/>
+        <line x1="14" y1="65" x2="32" y2="58" opacity="0.5"/>
+        <line x1="86" y1="65" x2="68" y2="58" opacity="0.5"/>
+        <line x1="35" y1="86" x2="42" y2="68" opacity="0.5"/>
+        <line x1="65" y1="86" x2="58" y2="68" opacity="0.5"/>
+      </g>
+    </svg>
+  </div>
+  <div class="starburst starburst--header-r2" aria-hidden="true">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#F9B3A9" stroke-width="3" stroke-linecap="round">
+        <line x1="50" y1="10" x2="50" y2="35"/>
+        <line x1="50" y1="65" x2="50" y2="90"/>
+        <line x1="10" y1="50" x2="35" y2="50"/>
+        <line x1="65" y1="50" x2="90" y2="50"/>
+        <line x1="22" y1="22" x2="38" y2="38"/>
+        <line x1="62" y1="62" x2="78" y2="78"/>
+        <line x1="78" y1="22" x2="62" y2="38"/>
+        <line x1="22" y1="78" x2="38" y2="62"/>
+      </g>
+    </svg>
+  </div>
+</header>
+
+<main>
+  <section class="board-wrap">
+    <div class="board" id="board"></div>
+  </section>
+
+  <aside class="panel">
+    <div class="panel-card" id="setup-card">
+      <h2>Add players</h2>
+      <div class="player-setup">
+        <label>Player name</label>
+        <input type="text" id="player-name" placeholder="e.g. Lukas" maxlength="20">
+        <label>Pawn color</label>
+        <div class="color-pick" id="color-pick"></div>
+        <button class="btn-secondary" id="add-player" style="width:100%; margin-bottom:8px;">+ Add player</button>
+      </div>
+      <div class="player-list" id="player-list"></div>
+      <button class="btn-primary" id="start-game" disabled>Start Game</button>
+    </div>
+
+    <div class="panel-card" id="play-card" style="display:none;">
+      <h3>Now playing</h3>
+      <div class="now-playing" id="current-name">—</div>
+      <div class="dice-area">
+        <div class="dice" id="dice">🎲</div>
+        <button class="btn-primary" id="roll-btn">Roll the dice</button>
+        <div class="turn-info" id="turn-info">Click roll to begin</div>
+      </div>
+      <h3>Scoreboard</h3>
+      <div class="player-list" id="scoreboard"></div>
+      <button class="btn-secondary" id="reset-game" style="width:100%;">Reset game</button>
+    </div>
+
+    <div class="panel-card" id="leaderboard-card">
+      <h2>Leaderboard</h2>
+      <div id="leaderboard-empty" class="lb-empty">
+        No games played yet. The first winner takes the throne.
+      </div>
+      <div class="lb-list" id="lb-list"></div>
+      <button class="btn-secondary" id="reset-lb" style="width:100%; margin-top:8px; display:none;">Reset leaderboard</button>
+    </div>
+
+    <div class="panel-card rules">
+      <h2 style="font-size:18px;">How to play</h2>
+      <ol>
+        <li>Add 2–4 players. Each picks a pawn color.</li>
+        <li>On your turn, roll the dice and move that many tiles forward.</li>
+        <li>The tile color tells you the card category. A card appears — answer it.</li>
+        <li><strong>Correct</strong>: stay on the tile and earn 1 point. <strong>Wrong</strong>: slide back 1 tile.</li>
+        <li>First to land on the <strong>FINISH</strong> tile wins (overshoots bounce back).</li>
+        <li>Some tiles are <strong>special</strong> — read what they say.</li>
+      </ol>
+    </div>
+  </aside>
+</main>
+
+<div class="modal-backdrop" id="modal">
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+/* =========================================================
+   DATA: BOARD LAYOUT + TRIVIA CARDS
+   Sources: cbstechday.dk, youthtechforum.com, CBS Wire (Apr 2023),
+   CBS Students event listing (2022), LinkedIn (Sam Afzali, CBS Tech Day team pages).
+   ========================================================= */
+
+const CATEGORIES = {
+  origin:   { label: 'Origins',   icon: '📜', color: '#FFD3A5' },
+  theme:    { label: 'Themes',    icon: '🎯', color: '#C6D8F2' },
+  speaker:  { label: 'Speakers',  icon: '🎤', color: '#E2D6ED' },
+  people:   { label: 'People',    icon: '👥', color: '#c8d8b3' },
+  partner:  { label: 'Partners',  icon: '🏢', color: '#F5B16A' },
+  wildcard: { label: 'Wildcard',  icon: '🎲', color: '#F9B3A9' },
+};
+
+// 36 tiles, snake pattern (9 cols × 4 rows). Tiles 0=START, 35=FINISH.
+const BOARD = [
+  { type: 'start',    label: 'START',                icon: '🚀' },
+  { type: 'origin',   label: 'Draw Origins' },
+  { type: 'theme',    label: 'Draw Themes' },
+  { type: 'speaker',  label: 'Draw Speakers' },
+  { type: 'people',   label: 'Draw People' },
+  { type: 'special',  label: 'Goodie Bag — roll again',  icon: '🎁', effect: 'rollAgain' },
+  { type: 'partner',  label: 'Draw Partners' },
+  { type: 'wildcard', label: 'Draw Wildcard' },
+  { type: 'origin',   label: 'Draw Origins' },
+
+  { type: 'theme',    label: 'Draw Themes' },
+  { type: 'speaker',  label: 'Draw Speakers' },
+  { type: 'special',  label: 'Vestager appears — skip ahead 2',  icon: '⭐', effect: 'forward2' },
+  { type: 'people',   label: 'Draw People' },
+  { type: 'partner',  label: 'Draw Partners' },
+  { type: 'wildcard', label: 'Draw Wildcard' },
+  { type: 'origin',   label: 'Draw Origins' },
+  { type: 'theme',    label: 'Draw Themes' },
+  { type: 'speaker',  label: 'Draw Speakers' },
+
+  { type: 'people',   label: 'Draw People' },
+  { type: 'special',  label: 'Power outage — skip turn',         icon: '⚡', effect: 'skipTurn' },
+  { type: 'partner',  label: 'Draw Partners' },
+  { type: 'wildcard', label: 'Draw Wildcard' },
+  { type: 'origin',   label: 'Draw Origins' },
+  { type: 'theme',    label: 'Draw Themes' },
+  { type: 'speaker',  label: 'Draw Speakers' },
+  { type: 'people',   label: 'Draw People' },
+  { type: 'partner',  label: 'Draw Partners' },
+
+  { type: 'wildcard', label: 'Draw Wildcard' },
+  { type: 'special',  label: 'Networking session — gain 1 point',icon: '🤝', effect: 'gainPoint' },
+  { type: 'origin',   label: 'Draw Origins' },
+  { type: 'theme',    label: 'Draw Themes' },
+  { type: 'speaker',  label: 'Draw Speakers' },
+  { type: 'people',   label: 'Draw People' },
+  { type: 'partner',  label: 'Draw Partners' },
+  { type: 'wildcard', label: 'Draw Wildcard' },
+  { type: 'finish',   label: 'FINISH',                 icon: '🏆' },
+];
+
+const CARDS = {
+  origin: [
+    {
+      q: "In what year was CBS Tech Day founded?",
+      a: ["2020", "2021", "2022", "2023"],
+      correct: 2,
+      src: "Founded in 2022 by CBS students from BSc Business Administration & Digital Management (cbstechday.dk/about)."
+    },
+    {
+      q: "Within which CBS student union was Tech Day originally born?",
+      a: ["FOKUS Union", "DM Union", "CBS Students", "Oeconom Union"],
+      correct: 1,
+      src: "CBS Tech Day started as a 'passion project within Digital Management' inside the DM Union, the student union for BSc Business Administration & Digital Management."
+    },
+    {
+      q: "Who is the founder of CBS Tech Day?",
+      a: ["Philip Horn Nielsen", "Sam Afzali", "Mikkel Flyverbom", "Alberte Andersen"],
+      correct: 1,
+      src: "Sam Afzali co-founded CBS Tech Day while studying at CBS (CBS Wire interview, April 2023)."
+    },
+    {
+      q: "Where does the founder Sam Afzali work today?",
+      a: ["Deloitte", "BCG", "McKinsey & Company", "Novo Nordisk"],
+      correct: 2,
+      src: "Sam Afzali's LinkedIn lists him at McKinsey & Company."
+    },
+    {
+      q: "From which CBS bachelor program did the founding team come?",
+      a: ["BSc International Business", "BSc Business Administration & Digital Management", "BSc Economics & Business Administration", "BSc HA(it.)"],
+      correct: 1,
+      src: "The founding cohort were BSc Business Administration & Digital Management students (cbstechday.dk/about)."
+    },
+    {
+      q: "The 2026 edition is marketed as which 'school year' of CBS TechDay?",
+      a: ["Year 3", "Year 4", "Year 5", "Year 6"],
+      correct: 2,
+      src: "The CBS TechDay site favicon and branding reads 'TECH DAY SCHOOL YEAR 5' for the 2026 edition."
+    },
+    {
+      q: "How did Youth Tech Forum (YTF) come about?",
+      a: ["A government initiative", "A grassroots student initiative that grew out of CBS Tech Day", "A spinoff from TechBBQ", "A Niels Brock alumni project"],
+      correct: 1,
+      src: "YTF describes itself as 'born from a grassroots student initiative' growing into a Europe-wide platform (youthtechforum.com)."
+    },
+    {
+      q: "How many participants attended the inaugural CBS Tech Day 1.0 in 2022?",
+      a: ["150", "300", "500", "700"],
+      correct: 1,
+      src: "The YTF pitch deck shows 300 participants at CBS Tech Day 1.0 in 2022."
+    },
+    {
+      q: "How many participants did YTF's events reach in 2025?",
+      a: ["700", "1,000", "1,500", "3,000"],
+      correct: 2,
+      src: "YTF's 2025 events reached 1,500 participants total (Pitch Deck participant chart)."
+    },
+    {
+      q: "What is YTF's stated vision?",
+      a: ["Sparking tech curiosity among all youths", "Educating Europe's next CEOs", "Bridging tech and democracy", "Building Denmark's tech talent pipeline"],
+      correct: 0,
+      src: "YTF Brand Strategy: Vision = 'Sparking tech curiosity among all youths'."
+    },
+    {
+      q: "Which year did YTF launch its Learning & Development program?",
+      a: ["2022", "2023", "2024", "2025"],
+      correct: 2,
+      src: "The L&D program was launched in 2024 (Pitch Deck event timeline)."
+    },
+    {
+      q: "Which YTF event was newly launched in 2025 alongside the formal founding of YTF?",
+      a: ["Youth Tech Summit", "Niels Brock Tech Day", "Tech Galla", "Tech Symposium"],
+      correct: 1,
+      src: "The first Niels Brock Tech Day debuted in 2025, the same year YTF formally became the parent organization (Pitch Deck)."
+    },
+    {
+      q: "Which YTF event is positioned as the 'flagship' in the Master Pitch Deck?",
+      a: ["CBS Tech Day", "Niels Brock Tech Day", "Youth Tech Summit", "Learning & Development"],
+      correct: 0,
+      src: "CBS Tech Day carries the flagship flag in YTF's organization chart (Pitch Deck p.3)."
+    },
+  ],
+
+  theme: [
+    {
+      q: "What was the theme of CBS TechDay 2024?",
+      a: ["Innovation Unleashed", "Democracy 2.0", "Powering Tomorrow", "Owning the Future"],
+      correct: 1,
+      src: "The 2024 theme was 'Democracy 2.0', held on 4 April 2024 (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "What was the theme of CBS TechDay 2025?",
+      a: ["Democracy 2.0", "Powering Tomorrow", "Owning the Future", "AI Everywhere"],
+      correct: 1,
+      src: "The 2025 theme was 'Powering Tomorrow', held on 3 April 2025 (cbstechday.dk/what-happened-2025)."
+    },
+    {
+      q: "What is the theme of CBS TechDay 2026?",
+      a: ["Tech for Good", "Who Gets to Own the Future", "Powering Tomorrow", "Democracy 3.0"],
+      correct: 1,
+      src: "TechDay 2026's theme is 'Who Gets to Own the Future', exploring European digital sovereignty (cbstechday.dk)."
+    },
+    {
+      q: "Which year's theme was 'Innovation Unleashed: Bridging the Future with Tech Solutions and Business Brilliance'?",
+      a: ["2022", "2023", "2024", "2025"],
+      correct: 1,
+      src: "This was the theme of CBS Tech Day 2023, which focused heavily on sustainability (CBS Tech Day LinkedIn posts)."
+    },
+    {
+      q: "The 2025 closing keynote covered Denmark's first what?",
+      a: ["Quantum lab", "AI supercomputer (Gefion)", "Tech unicorn", "Government AI ministry"],
+      correct: 1,
+      src: "The 2025 keynote covered 'Gefion' — Denmark's first AI supercomputer (cbstechday.dk schedule 2025)."
+    },
+    {
+      q: "Which TechDay focused on sustainability with companies like Ørsted, Equinor, and Google Denmark?",
+      a: ["2022", "2023", "2024", "2025"],
+      correct: 1,
+      src: "On 23 March 2023, TechDay featured Google Denmark, BCG, Ørsted, Equinor, and Blue Lobster on sustainability (CBS Wire, April 2023)."
+    },
+    {
+      q: "TechDay 2026 challenges which narrative?",
+      a: ["That crypto is dead", "That AI can fix everything", "That Europe has lost", "That tech is too regulated"],
+      correct: 1,
+      src: "The 2026 theme questions 'whether AI truly drives systemic change or just offers high-tech shortcuts' (cbstechday.dk)."
+    },
+  ],
+
+  speaker: [
+    {
+      q: "Which EU Commissioner headlined the inaugural CBS Tech Day in 2022?",
+      a: ["Ursula von der Leyen", "Margrethe Vestager", "Frans Timmermans", "Thierry Breton"],
+      correct: 1,
+      src: "Margrethe Vestager, then EVP of the European Commission and Commissioner for the Digital Age, headlined the 2022 event (cbsstudents.dk and cbs.dk listings)."
+    },
+    {
+      q: "Who delivered the closing keynote at TechDay 2024?",
+      a: ["Caroline Stage", "Anders Dons (Deloitte)", "Nadia Carlsten", "Mikkel Flyverbom"],
+      correct: 1,
+      src: "Anders Dons of Deloitte gave the 2024 keynote: 'Our Future Relationship with Technology' (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "Who delivered the closing keynote at TechDay 2025?",
+      a: ["Nadia Carlsten (DCAI)", "Caroline Stage", "Anders Dons", "Ebba Carbonnier"],
+      correct: 0,
+      src: "Nadia Carlsten, CEO of the Danish Centre for AI Innovation (DCAI), gave the 2025 keynote on Denmark's Gefion supercomputer."
+    },
+    {
+      q: "Who is the closing keynote speaker at TechDay 2026?",
+      a: ["Margrethe Vestager", "Nadia Carlsten", "Ebba Carbonnier", "Gry Hasselbalch"],
+      correct: 2,
+      src: "Ebba Carbonnier is listed as the 2026 closing keynote speaker (cbstechday.dk)."
+    },
+    {
+      q: "Which Danish minister gave the welcome speech at TechDay 2025?",
+      a: ["Caroline Stage (Minister of Digitalization)", "Marie Bjerre", "Mette Frederiksen", "Jeppe Bruus"],
+      correct: 0,
+      src: "Caroline Stage (Minister of Digitalization) opened TechDay 2025 (cbstechday.dk/what-happened-2025)."
+    },
+    {
+      q: "Which minister opened TechDay 2024?",
+      a: ["Caroline Stage", "Mette Frederiksen", "Marie Bjerre", "Sophie Løhde"],
+      correct: 2,
+      src: "Marie Bjerre, then Minister of Digital Government & Gender Equality, opened TechDay 2024 (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "Which CBS professor has appeared on multiple TechDay panels (2022, 2024, 2026)?",
+      a: ["Mikkel Flyverbom", "Peter Møllgaard", "Inger Askehave", "Anders Dons"],
+      correct: 0,
+      src: "Mikkel Flyverbom, CBS Professor of Digital Transformations, has been a recurring panelist across editions."
+    },
+    {
+      q: "Who gave the Presidential Welcome at TechDay 2026?",
+      a: ["Inger Askehave", "Peter Møllgaard", "Nikolaj Malchow-Møller", "Mikkel Flyverbom"],
+      correct: 1,
+      src: "Peter Møllgaard, CBS President, delivered the 2026 Presidential Welcome (cbstechday.dk schedule)."
+    },
+  ],
+
+  people: [
+    {
+      q: "Who are the two Project Leads for CBS TechDay 2026?",
+      a: ["Alberte Andersen & Madeleine Steenberg Williams", "Philip Horn Nielsen & Anja Marie Bjarnason", "Sam Afzali & Mads Frandsen", "Selma Christiansen & Kimia Nikkhah"],
+      correct: 0,
+      src: "Alberte Andersen and Madeleine Steenberg Williams are the 2026 Project Leads (cbstechday.dk/our-team)."
+    },
+    {
+      q: "Who were the Project Leads for CBS TechDay 2025?",
+      a: ["Alberte Andersen & Madeleine Steenberg Williams", "Philip Horn Nielsen & Anja Marie Bjarnason", "Sam Afzali & Selma Hatjoullis", "Christian Müller & Maria Arte"],
+      correct: 1,
+      src: "Philip Horn Nielsen and Anja Marie Bjarnason led TechDay 2025 (referenced in Sam Afzali's LinkedIn recap)."
+    },
+    {
+      q: "Which functional teams organize CBS TechDay (per the 2026 team page)?",
+      a: ["Sales, Marketing, Ops, Legal", "Finance, Marketing, Digital, Alliances, Essentials, Partnerships, People & Culture", "Tech, Comms, HR", "Events, Sponsorship, Volunteers"],
+      correct: 1,
+      src: "The 2026 'Our Team' page lists Finance, Marketing, Digital, Alliances, Essentials, Partnerships, and People & Culture, plus the YTF Steering Committee (cbstechday.dk/our-team)."
+    },
+    {
+      q: "What is the 'YTF Steering Committee' in relation to CBS TechDay?",
+      a: ["A sponsor body", "The Youth Tech Forum's oversight team for CBS TechDay", "A government body", "An alumni network"],
+      correct: 1,
+      src: "On the 2026 team page, YTF Steering Committee members (Oliver Krogsgaard, Lea Asraf) sit alongside the project team (cbstechday.dk/our-team)."
+    },
+    {
+      q: "Who moderated CBS Tech Day 2023?",
+      a: ["Selma Juul Christiansen & Kimia Nikkhah", "Alberte Andersen & Madeleine Williams", "Sam Afzali & Philip Nielsen", "Mads Frandsen alone"],
+      correct: 0,
+      src: "Selma Juul Christiansen and Kimia Nikkhah were named as the 2023 moderators (CBS Wire, April 2023)."
+    },
+    {
+      q: "Which CBS leader gave the 2022 opening speech alongside Vestager and Flyverbom?",
+      a: ["Peter Møllgaard", "Inger Askehave (then CEO of CBS)", "Nikolaj Malchow-Møller", "Lars Pram"],
+      correct: 1,
+      src: "Inger Askehave, then CEO of CBS, was listed among the 2022 opening speakers (cbsstudents.dk event listing)."
+    },
+    {
+      q: "Who serves on the 2026 TechDay Finance team?",
+      a: ["Christian Müller & Selma Garborg Hatjoullis", "Mihály Szigethy & Lucas Skov", "Alexander Myhr & Callum Rasmussen", "Sara Kempe alone"],
+      correct: 0,
+      src: "Christian Müller and Selma Garborg Hatjoullis are listed on Finance for 2026 (cbstechday.dk/our-team)."
+    },
+    {
+      q: "Who is the Chair of YTF's Board of Directors?",
+      a: ["Sam Afzali", "Selma Juul Christiansen", "Daniel Westermann Strandby", "Lauge Winther"],
+      correct: 2,
+      src: "Daniel Westermann Strandby (Maersk) is YTF Chair, per the Master Pitch Deck."
+    },
+    {
+      q: "Who is the Vice Chair of YTF's Board?",
+      a: ["Selma Juul Christiansen (Nordea)", "Kimia Nikkhah (Rambøll)", "Julia Hoffenback (Dawn)", "Anja Bjarnason (Implement)"],
+      correct: 0,
+      src: "Selma Juul Christiansen, currently at Nordea, is YTF Vice Chair (Pitch Deck)."
+    },
+    {
+      q: "At which firm does YTF board member Anja Bjarnason work?",
+      a: ["Deloitte", "Implement Consulting Group", "BCG", "McKinsey"],
+      correct: 1,
+      src: "Anja Bjarnason is at Implement Consulting Group and holds the People & Culture seat on YTF's board (Pitch Deck)."
+    },
+    {
+      q: "At which firm does board member Thomas Rald Kaspersen work?",
+      a: ["Deloitte", "PwC", "EY", "KPMG"],
+      correct: 0,
+      src: "Thomas Rald Kaspersen (Deloitte) holds a People & Culture seat on YTF's board (Pitch Deck)."
+    },
+    {
+      q: "Who handles Funding alongside Sam Afzali on the YTF board?",
+      a: ["Julia Hoffenback", "Kimia Nikkhah", "Tomas Zdychavsky", "Kha Pham"],
+      correct: 1,
+      src: "Kimia Nikkhah (Rambøll) holds the Funding seat (Pitch Deck)."
+    },
+    {
+      q: "Which YTF board member works at J.P. Morgan?",
+      a: ["Andreas Kjeldberg Bach Pedersen", "Sebastian Erhardt", "Lauge Winther", "Kha Pham"],
+      correct: 1,
+      src: "Sebastian Erhardt (J.P. Morgan) holds a Finance seat on the board (Pitch Deck)."
+    },
+    {
+      q: "Which YTF board member works at Pandora?",
+      a: ["Tomas Zdychavsky", "Julia Hoffenback", "Kha Pham", "Kimia Nikkhah"],
+      correct: 0,
+      src: "Tomas Zdychavsky (Pandora) covers Business Analytics on the board (Pitch Deck)."
+    },
+  ],
+
+  partner: [
+    {
+      q: "Which Danish challenger bank joined the 2024 'Democracy & Decentralization' panel?",
+      a: ["Lunar", "Mobilepay", "Saxo Bank", "Pleo"],
+      correct: 0,
+      src: "Lunar joined Panel Debate 2: Democracy & Decentralization in 2024 (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "Which AI hardware company partnered with TechDay 2025?",
+      a: ["AMD", "NVIDIA", "Intel", "Qualcomm"],
+      correct: 1,
+      src: "NVIDIA was a partner of TechDay 2025 (cbstechday.dk/what-happened-2025 and YTF site partner logos)."
+    },
+    {
+      q: "Which two foundations helped fund CBS Tech Day 2025?",
+      a: ["Carlsberg Foundation & Velux Foundation", "Otto Mønsted Foundation & William Demant Foundation", "Novo Nordisk Foundation & Lundbeck Foundation", "A.P. Møller Fund & Augustinus Foundation"],
+      correct: 1,
+      src: "Otto Mønsted Foundation and William Demant Foundation are credited as 2025 supporting funds (cbstechday.dk/what-happened-2025)."
+    },
+    {
+      q: "Which Big 4 firm delivered the keynote at TechDay 2024?",
+      a: ["PwC", "Deloitte", "EY", "KPMG"],
+      correct: 1,
+      src: "Anders Dons of Deloitte gave the 2024 keynote (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "Which consulting firm has been a recurring TechDay partner across multiple editions?",
+      a: ["McKinsey", "BCG", "Bain", "Capgemini"],
+      correct: 1,
+      src: "BCG appears as a partner across 2024, 2025, and 2026 panels (cbstechday.dk and YTF partner logos)."
+    },
+    {
+      q: "Which national authority joined the 2024 'Data Privacy & Surveillance' panel?",
+      a: ["Erhvervsstyrelsen", "Datatilsynet (Danish Data Protection Agency)", "Skatteforvaltningen", "Forsvarets Efterretningstjeneste"],
+      correct: 1,
+      src: "Datatilsynet joined the 2024 Data Privacy & Surveillance panel (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "Which French diplomat spoke on the 2024 Data Privacy & Surveillance panel?",
+      a: ["Henri Verdier (French Ambassador for Digital Affairs)", "Cédric O", "Jean-Noël Barrot", "Thierry Breton"],
+      correct: 0,
+      src: "Henri Verdier, French Ambassador for Digital Affairs, joined the 2024 panel (cbstechday.dk/what-happened-2024)."
+    },
+    {
+      q: "Which Danish pharmaceutical giant joined TechDay 2025?",
+      a: ["Lundbeck", "Novo Nordisk", "Coloplast", "Leo Pharma"],
+      correct: 1,
+      src: "Novo Nordisk was a TechDay 2025 partner (cbstechday.dk/what-happened-2025)."
+    },
+  ],
+
+  wildcard: [
+    {
+      q: "What does YTF stand for?",
+      a: ["Young Tech Founders", "Youth Tech Forum", "Yearly Tech Fair", "Youth Technology Fund"],
+      correct: 1,
+      src: "YTF = Youth Tech Forum (youthtechforum.com)."
+    },
+    {
+      q: "Which three events does Youth Tech Forum currently run?",
+      a: ["CBS TechDay, Niels Brock TechDay, Youth Tech Summit", "CBS TechDay, TechBBQ, SLUSH", "Niels Brock TechDay, NorthSide, Trailblazer", "Only CBS TechDay"],
+      correct: 0,
+      src: "The YTF homepage lists CBS TechDay, Niels Brock TechDay, and Youth Tech Summit as its three event formats (youthtechforum.com)."
+    },
+    {
+      q: "Niels Brock TechDay primarily targets which student group?",
+      a: ["PhD researchers", "High school students", "MBA candidates", "Industry professionals"],
+      correct: 1,
+      src: "Niels Brock TechDay 'brings together high school students to explore tech' (youthtechforum.com/niels-brock-techday)."
+    },
+    {
+      q: "Which event is described as YTF's 'flagship summit'?",
+      a: ["CBS TechDay", "Niels Brock TechDay", "Youth Tech Summit", "TechBBQ"],
+      correct: 2,
+      src: "Youth Tech Summit is YTF's 'flagship summit connecting Europe's youth to the global tech stage' (youthtechforum.com)."
+    },
+    {
+      q: "Where is CBS TechDay 2026 being held?",
+      a: ["CBS Solbjerg Plads", "CBS Ovnhallen, Porcelænshaven 24A, Frederiksberg", "Bella Center", "Niels Brock Copenhagen"],
+      correct: 1,
+      src: "TechDay 2026 takes place at CBS Ovnhallen, Porcelænshaven 24A, 2000 Frederiksberg (cbstechday.dk)."
+    },
+    {
+      q: "On which date is CBS TechDay 2026 scheduled?",
+      a: ["26 March 2026", "3 April 2026", "4 April 2026", "23 March 2026"],
+      correct: 0,
+      src: "TechDay 2026 is on 26 March 2026 (cbstechday.dk)."
+    },
+    {
+      q: "How many speakers featured at CBS Tech Day 2023?",
+      a: ["6", "8", "12", "20"],
+      correct: 2,
+      src: "CBS Tech Day reported '12 unforgettable speakers' at the 2023 event (CBS Tech Day LinkedIn)."
+    },
+    {
+      q: "What did Sam Afzali call CBS Tech Day in 2023?",
+      a: ["'A career fair'", "'A passion project within Digital Management'", "'The new SXSW'", "'A research initiative'"],
+      correct: 1,
+      src: "Co-founder Sam Afzali described Tech Day as 'a passion project within Digital Management' (CBS Wire, April 2023)."
+    },
+    {
+      q: "Where was the 2025 afterparty held?",
+      a: ["Vega", "Søpavillonen", "Culture Box", "Lille Vega"],
+      correct: 1,
+      src: "The 2025 afterparty was at Søpavillonen (cbstechday.dk/what-happened-2025 schedule)."
+    },
+    {
+      q: "Which Danish Minister publicly endorsed Youth Tech Forum?",
+      a: ["Mette Frederiksen", "Caroline Stage (Minister of Digital Affairs)", "Marie Bjerre", "Jeppe Bruus"],
+      correct: 1,
+      src: "Caroline Stage, Minister of Digital Affairs, is quoted on the YTF homepage endorsing the forum (youthtechforum.com)."
+    },
+    {
+      q: "What are YTF's four brand values (the 'four pillars')?",
+      a: ["Bold, Fast, Loud, Free", "Youthful, Professional, Inclusive, Empowering", "Connect, Learn, Build, Scale", "Sparking, Bridging, Inspiring, Leading"],
+      correct: 1,
+      src: "YTF Brand Strategy lists the four pillars: Youthful, Professional, Inclusive, Empowering."
+    },
+    {
+      q: "What are YTF's three strategic 'anchors'?",
+      a: ["By youth, for youth / European focus / Learning & development", "Tech / Talent / Trust", "Education / Industry / Government", "Bold / Inclusive / Fast"],
+      correct: 0,
+      src: "YTF Master Pitch Deck (p.2): the three anchors are 'By youth, for youth', 'European focus', and 'Learning & development'."
+    },
+    {
+      q: "Which font does YTF use for headlines per its brand guide?",
+      a: ["Inter", "Space Grotesk", "TT Hoves", "Helvetica"],
+      correct: 2,
+      src: "YTF Brand Strategy: headline font is TT Hoves, body font is Manrope."
+    },
+    {
+      q: "Which is the official body font of the YTF brand?",
+      a: ["Manrope", "Inter", "Roboto", "Open Sans"],
+      correct: 0,
+      src: "YTF Brand Strategy: body font = Manrope."
+    },
+    {
+      q: "What is the hex code of YTF's 'Lavender Core' primary color?",
+      a: ["#8262A8", "#A88BCB", "#8B2FFF", "#E2D6ED"],
+      correct: 1,
+      src: "YTF Brand Strategy primary palette: #A88BCB = Lavender Core."
+    },
+    {
+      q: "Which color is reserved for CBS TechDay-specific co-branded materials?",
+      a: ["Vivid Lavender #8B2FFF", "Sky Blue #C6D8F2", "Golden Peach #F5B16A", "Warm Apricot #FFD3A5"],
+      correct: 1,
+      src: "Sky Blue #C6D8F2 is the complementary tone specifically for CBS TechDay content (Brand Strategy p.9)."
+    },
+    {
+      q: "Which YTF event is planned for 2027 to celebrate young tech talents?",
+      a: ["Tech Symposium", "Tech Galla", "Tech Academy", "Youth Tech Summit"],
+      correct: 1,
+      src: "Tech Galla — planned for 2027 — celebrates young tech talents (Pitch Deck p.9 event roadmap)."
+    },
+    {
+      q: "Which YTF event is planned for 2028?",
+      a: ["Tech Academy", "Tech Galla", "Tech Symposium", "Youth Tech Summit"],
+      correct: 2,
+      src: "Tech Symposium is on the 2028 roadmap (Pitch Deck event timeline)."
+    },
+    {
+      q: "What is the price of an L&D Partnership with YTF (ex. VAT)?",
+      a: ["DKK 20,000", "DKK 40,000", "DKK 60,000", "DKK 100,000"],
+      correct: 2,
+      src: "YTF Pitch Deck pricing: L&D Partnership = DKK 60,000 ex. VAT."
+    },
+    {
+      q: "How much does a CBS Tech Day Panel Seat cost (ex. VAT)?",
+      a: ["DKK 10,000", "DKK 20,000", "DKK 30,000", "DKK 60,000"],
+      correct: 1,
+      src: "YTF Pitch Deck: CBS Tech Day Panel Seat add-on = DKK 20,000 ex. VAT."
+    },
+    {
+      q: "What is YTF's stated YoY participant growth target?",
+      a: ["20% avg.", "50% avg.", "100% avg.", "200% avg."],
+      correct: 1,
+      src: "Strategic objective per Pitch Deck p.2: 'Pursue 50% avg. YoY participants growth across products'."
+    },
+    {
+      q: "Which four people are listed as YTF Ambassadors?",
+      a: ["Vestager, Flyverbom, Stage, Møllgaard", "Stage, Bjerre, Frederiksen, Vestager", "Afzali, Strandby, Nikkhah, Christiansen", "Dons, Carlsten, Carbonnier, Flyverbom"],
+      correct: 0,
+      src: "YTF Pitch Deck Ambassadors page lists Vestager, Flyverbom, Stage, and Møllgaard."
+    },
+  ],
+};
+
+const COLORS = [
+  { name: 'slate purple',   hex: '#8262A8' },
+  { name: 'vivid lavender', hex: '#8B2FFF' },
+  { name: 'olive green',    hex: '#96B07A' },
+  { name: 'golden peach',   hex: '#F5B16A' },
+  { name: 'dusty rose',     hex: '#D8A7B1' },
+  { name: 'peach coral',    hex: '#F9B3A9' },
+];
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let players = [];
+let currentPlayerIdx = 0;
+let gameStarted = false;
+let pendingMove = null; // set when card open
+let selectedColorIdx = 0;
+let skipMap = {}; // {playerName: turnsToSkip}
+
+/* =========================================================
+   SETUP UI
+   ========================================================= */
+const colorPick = document.getElementById('color-pick');
+COLORS.forEach((c, i) => {
+  const b = document.createElement('button');
+  b.style.background = c.hex;
+  b.dataset.idx = i;
+  b.title = c.name;
+  if (i === 0) b.classList.add('selected');
+  b.onclick = () => {
+    selectedColorIdx = i;
+    document.querySelectorAll('#color-pick button').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+  };
+  colorPick.appendChild(b);
+});
+
+function refreshPlayerList() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  players.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML = `
+      <div class="dot" style="background:${p.color}"></div>
+      <span>${p.name}</span>
+      <button class="remove" data-i="${i}" title="Remove">✕</button>
+    `;
+    chip.querySelector('.remove').onclick = () => {
+      players.splice(i, 1);
+      refreshPlayerList();
+      document.getElementById('start-game').disabled = players.length < 2;
+    };
+    list.appendChild(chip);
+  });
+  // disable taken colors
+  document.querySelectorAll('#color-pick button').forEach((btn, idx) => {
+    const taken = players.some(p => p.colorIdx === idx);
+    btn.style.opacity = taken ? 0.3 : 1;
+    btn.style.pointerEvents = taken ? 'none' : 'auto';
+    if (taken && selectedColorIdx === idx) {
+      // pick next available
+      const free = COLORS.findIndex((_, j) => !players.some(p => p.colorIdx === j));
+      if (free !== -1) {
+        selectedColorIdx = free;
+        document.querySelectorAll('#color-pick button').forEach(x => x.classList.remove('selected'));
+        document.querySelector(`#color-pick button[data-idx="${free}"]`).classList.add('selected');
+      }
+    }
+  });
+}
+
+document.getElementById('add-player').onclick = () => {
+  const input = document.getElementById('player-name');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  if (players.length >= 4) { alert('Max 4 players.'); return; }
+  if (players.some(p => p.colorIdx === selectedColorIdx)) {
+    alert('That color is taken.'); return;
+  }
+  players.push({
+    name,
+    color: COLORS[selectedColorIdx].hex,
+    colorIdx: selectedColorIdx,
+    pos: 0,
+    score: 0,
+    initial: name[0].toUpperCase(),
+  });
+  input.value = '';
+  refreshPlayerList();
+  document.getElementById('start-game').disabled = players.length < 2;
+  input.focus();
+};
+document.getElementById('player-name').addEventListener('keypress', e => {
+  if (e.key === 'Enter') document.getElementById('add-player').click();
+});
+
+document.getElementById('start-game').onclick = () => {
+  if (players.length < 2) return;
+  gameStarted = true;
+  document.getElementById('setup-card').style.display = 'none';
+  document.getElementById('play-card').style.display = 'block';
+  renderBoard();
+  refreshScoreboard();
+  updateTurn();
+};
+
+document.getElementById('reset-game').onclick = () => {
+  if (!confirm('Reset the whole game?')) return;
+  players = []; currentPlayerIdx = 0; gameStarted = false; skipMap = {};
+  document.getElementById('setup-card').style.display = 'block';
+  document.getElementById('play-card').style.display = 'none';
+  refreshPlayerList();
+  renderBoard();
+};
+
+/* =========================================================
+   BOARD RENDERING
+   Snake pattern: rows alternate left-to-right and right-to-left.
+   ========================================================= */
+function renderBoard() {
+  const grid = document.getElementById('board');
+  grid.innerHTML = '';
+  // Build display order: row0 L→R (0–8), row1 R→L (9–17), row2 L→R (18–26), row3 R→L (27–35)
+  const cols = 9, rows = 4;
+  const visual = new Array(cols * rows);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let idx;
+      if (r % 2 === 0) idx = r * cols + c;
+      else idx = r * cols + (cols - 1 - c);
+      visual[r * cols + c] = idx;
+    }
+  }
+  visual.forEach(idx => {
+    const t = BOARD[idx];
+    const tile = document.createElement('div');
+    tile.className = `tile cat-${t.type}`;
+    tile.dataset.idx = idx;
+    const icon = t.icon || CATEGORIES[t.type]?.icon || '';
+    tile.innerHTML = `
+      <div class="tile-num">${idx === 0 ? '' : idx === 35 ? '' : idx}</div>
+      <div class="tile-icon">${icon}</div>
+      <div class="tile-label">${t.label}</div>
+      <div class="pawns" data-idx="${idx}"></div>
+    `;
+    grid.appendChild(tile);
+  });
+  updatePawns();
+  highlightCurrent();
+}
+
+function updatePawns() {
+  document.querySelectorAll('.pawns').forEach(p => p.innerHTML = '');
+  players.forEach(p => {
+    const slot = document.querySelector(`.pawns[data-idx="${p.pos}"]`);
+    if (slot) {
+      const pawn = document.createElement('div');
+      pawn.className = 'pawn';
+      pawn.style.background = p.color;
+      pawn.style.color = '#fff';
+      pawn.textContent = p.initial;
+      slot.appendChild(pawn);
+    }
+  });
+}
+
+function highlightCurrent() {
+  document.querySelectorAll('.tile').forEach(t => t.classList.remove('tile-active'));
+  if (!gameStarted || players.length === 0) return;
+  const p = players[currentPlayerIdx];
+  const tile = document.querySelector(`.tile[data-idx="${p.pos}"]`);
+  if (tile) tile.classList.add('tile-active');
+}
+
+/* =========================================================
+   GAMEPLAY
+   ========================================================= */
+function updateTurn() {
+  const p = players[currentPlayerIdx];
+  document.getElementById('current-name').textContent = p.name;
+  document.getElementById('current-name').style.color = p.color;
+  document.getElementById('turn-info').textContent = 'Click roll to begin';
+  document.getElementById('roll-btn').disabled = false;
+  highlightCurrent();
+}
+
+function refreshScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = '';
+  players.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip' + (i === currentPlayerIdx ? ' is-active' : '');
+    chip.innerHTML = `
+      <div class="dot" style="background:${p.color}"></div>
+      <span>${p.name}</span>
+      <span class="score">${p.score} pt · tile ${p.pos}</span>
+    `;
+    sb.appendChild(chip);
+  });
+}
+
+document.getElementById('roll-btn').onclick = () => {
+  const p = players[currentPlayerIdx];
+  // skip-turn handling
+  if (skipMap[p.name] > 0) {
+    skipMap[p.name]--;
+    document.getElementById('turn-info').textContent = `${p.name} is skipping this turn (${skipMap[p.name]} more).`;
+    setTimeout(nextPlayer, 1200);
+    return;
+  }
+  rollAndMove();
+};
+
+function rollAndMove(forceRoll) {
+  const dice = document.getElementById('dice');
+  const rollBtn = document.getElementById('roll-btn');
+  rollBtn.disabled = true;
+  dice.classList.add('rolling');
+  const roll = forceRoll || (1 + Math.floor(Math.random() * 6));
+  setTimeout(() => {
+    dice.classList.remove('rolling');
+    dice.textContent = roll;
+    movePlayer(roll);
+  }, 600);
+}
+
+function movePlayer(steps) {
+  const p = players[currentPlayerIdx];
+  let target = p.pos + steps;
+  // Bounce back if overshoot
+  const last = BOARD.length - 1;
+  if (target > last) target = last - (target - last);
+  if (target < 0) target = 0;
+  p.pos = target;
+  updatePawns();
+  highlightCurrent();
+  refreshScoreboard();
+  setTimeout(() => handleLanding(target), 400);
+}
+
+function handleLanding(idx) {
+  const tile = BOARD[idx];
+  const p = players[currentPlayerIdx];
+
+  if (tile.type === 'finish') {
+    showWinModal(p);
+    return;
+  }
+  if (tile.type === 'start') {
+    document.getElementById('turn-info').textContent = `${p.name} returns to start.`;
+    setTimeout(nextPlayer, 1200);
+    return;
+  }
+  if (tile.type === 'special') {
+    showSpecialModal(tile, p);
+    return;
+  }
+  // Card tile
+  showCard(tile.type);
+}
+
+function showSpecialModal(tile, p) {
+  const modal = document.getElementById('modal');
+  const card = document.getElementById('card');
+  card.innerHTML = `
+    <span class="card-category" style="background:${CATEGORIES.wildcard.color};">SPECIAL</span>
+    <h3 class="card-question">${tile.icon || ''} ${tile.label}</h3>
+    <button class="card-close">OK</button>
+  `;
+  card.querySelector('.card-close').onclick = () => {
+    modal.classList.remove('active');
+    applySpecial(tile.effect, p);
+  };
+  modal.classList.add('active');
+}
+
+function applySpecial(effect, p) {
+  if (effect === 'rollAgain') {
+    document.getElementById('turn-info').textContent = `${p.name} rolls again!`;
+    document.getElementById('roll-btn').disabled = false;
+  } else if (effect === 'forward2') {
+    let target = Math.min(p.pos + 2, BOARD.length - 1);
+    p.pos = target;
+    updatePawns(); highlightCurrent(); refreshScoreboard();
+    setTimeout(() => handleLanding(target), 600);
+  } else if (effect === 'skipTurn') {
+    skipMap[p.name] = (skipMap[p.name] || 0) + 1;
+    nextPlayer();
+  } else if (effect === 'gainPoint') {
+    p.score += 1;
+    refreshScoreboard();
+    nextPlayer();
+  }
+}
+
+function showCard(category) {
+  const pool = CARDS[category];
+  const card = pool[Math.floor(Math.random() * pool.length)];
+  const p = players[currentPlayerIdx];
+  const modal = document.getElementById('modal');
+  const cardEl = document.getElementById('card');
+  const cat = CATEGORIES[category];
+
+  cardEl.innerHTML = `
+    <span class="card-category" style="background:${cat.color};">${cat.icon} ${cat.label}</span>
+    <h3 class="card-question">${card.q}</h3>
+    <div class="card-answers"></div>
+    <div class="card-feedback"></div>
+    <div class="card-source" style="display:none;"></div>
+    <button class="card-close" style="display:none;">Next player →</button>
+  `;
+  const answersWrap = cardEl.querySelector('.card-answers');
+  const feedbackEl = cardEl.querySelector('.card-feedback');
+  const sourceEl = cardEl.querySelector('.card-source');
+  const closeBtn = cardEl.querySelector('.card-close');
+
+  card.a.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn';
+    btn.innerHTML = `<span class="letter">${String.fromCharCode(65 + i)}</span><span>${opt}</span>`;
+    btn.onclick = () => {
+      // disable all
+      answersWrap.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+      if (i === card.correct) {
+        btn.classList.add('correct');
+        feedbackEl.textContent = '✓ Correct! +1 point';
+        feedbackEl.style.color = '#2e7d32';
+        p.score += 1;
+      } else {
+        btn.classList.add('wrong');
+        const correctBtn = answersWrap.querySelectorAll('.answer-btn')[card.correct];
+        correctBtn.classList.add('correct');
+        feedbackEl.textContent = '✗ Wrong — slide back 1 tile';
+        feedbackEl.style.color = '#c62828';
+        p.pos = Math.max(0, p.pos - 1);
+      }
+      sourceEl.textContent = '↳ ' + card.src;
+      sourceEl.style.display = 'block';
+      closeBtn.style.display = 'block';
+      updatePawns();
+      highlightCurrent();
+      refreshScoreboard();
+    };
+    answersWrap.appendChild(btn);
+  });
+
+  closeBtn.onclick = () => {
+    modal.classList.remove('active');
+    nextPlayer();
+  };
+
+  modal.classList.add('active');
+}
+
+/* =========================================================
+   LEADERBOARD (persists across games via localStorage)
+   ========================================================= */
+const LB_KEY = 'ytf-game-leaderboard-v1';
+
+function lbLoad() {
+  try {
+    const raw = localStorage.getItem(LB_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) || {};
+  } catch (e) {
+    return {}; // storage unavailable — graceful fallback
+  }
+}
+
+function lbSave(data) {
+  try {
+    localStorage.setItem(LB_KEY, JSON.stringify(data));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function lbRecordGame(winner, allPlayers) {
+  const data = lbLoad();
+  const ts = Date.now();
+  allPlayers.forEach(p => {
+    const key = p.name.trim().toLowerCase();
+    if (!data[key]) {
+      data[key] = {
+        name: p.name,
+        wins: 0,
+        games: 0,
+        totalPoints: 0,
+        bestScore: 0,
+        lastPlayed: ts,
+      };
+    }
+    const rec = data[key];
+    rec.name = p.name; // keep latest casing
+    rec.games += 1;
+    rec.totalPoints += p.score;
+    rec.bestScore = Math.max(rec.bestScore, p.score);
+    rec.lastPlayed = ts;
+    if (p.name === winner.name) rec.wins += 1;
+  });
+  lbSave(data);
+  return data;
+}
+
+function lbRender(highlightName) {
+  const data = lbLoad();
+  const list = document.getElementById('lb-list');
+  const empty = document.getElementById('leaderboard-empty');
+  const resetBtn = document.getElementById('reset-lb');
+  if (!list) return;
+
+  const records = Object.values(data).sort((a, b) => {
+    // Sort by wins desc, then by win rate, then by best score
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aRate = a.games ? a.wins / a.games : 0;
+    const bRate = b.games ? b.wins / b.games : 0;
+    if (bRate !== aRate) return bRate - aRate;
+    return b.bestScore - a.bestScore;
+  });
+
+  if (records.length === 0) {
+    empty.style.display = 'block';
+    list.innerHTML = '';
+    resetBtn.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  resetBtn.style.display = 'block';
+
+  const top = records.slice(0, 10);
+  const medals = ['🥇', '🥈', '🥉'];
+
+  list.innerHTML = top.map((r, i) => {
+    const rate = r.games ? Math.round((r.wins / r.games) * 100) : 0;
+    const isHighlight = highlightName && r.name === highlightName;
+    return `
+      <div class="lb-row lb-rank-${i + 1} ${isHighlight ? 'lb-just-played' : ''}">
+        <div class="lb-rank">${i < 3 ? medals[i] : (i + 1)}</div>
+        <div class="lb-name" title="${escapeHtml(r.name)}">${escapeHtml(r.name)}</div>
+        <div class="lb-stats">
+          <span class="lb-wins">${r.wins} ${r.wins === 1 ? 'win' : 'wins'}</span>
+          <span>${r.games} ${r.games === 1 ? 'game' : 'games'} · ${rate}% · best ${r.bestScore}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+document.getElementById('reset-lb').onclick = () => {
+  if (!confirm('Reset the entire leaderboard? This cannot be undone.')) return;
+  try { localStorage.removeItem(LB_KEY); } catch (e) {}
+  lbRender();
+};
+
+// Initial render
+lbRender();
+
+function showWinModal(p) {
+  // Record the result BEFORE rendering so the leaderboard reflects the new winner
+  lbRecordGame(p, players);
+  lbRender(p.name);
+
+  const modal = document.getElementById('modal');
+  const card = document.getElementById('card');
+  const ranked = [...players].sort((a, b) => b.score - a.score);
+  const data = lbLoad();
+  const lbRecords = Object.values(data).sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aRate = a.games ? a.wins / a.games : 0;
+    const bRate = b.games ? b.wins / b.games : 0;
+    if (bRate !== aRate) return bRate - aRate;
+    return b.bestScore - a.bestScore;
+  }).slice(0, 5);
+  const medals = ['🥇', '🥈', '🥉'];
+
+  card.innerHTML = `
+    <div class="win-banner">
+      <div class="confetti">🎉 🏆 🎉</div>
+      <h2>${escapeHtml(p.name)} wins!</h2>
+      <p style="font-size:13px; color:var(--graphite); margin-top:4px;">
+        Reached the FINISH tile first with ${p.score} trivia points.
+      </p>
+    </div>
+    <h3 style="font-family:'Manrope',sans-serif; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; margin-top:16px;">Final standings (this game)</h3>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
+      ${ranked.map((r, i) => `
+        <div class="player-chip">
+          <div class="dot" style="background:${r.color}"></div>
+          <span>${i + 1}. ${escapeHtml(r.name)}</span>
+          <span class="score">${r.score} pt</span>
+        </div>
+      `).join('')}
+    </div>
+    <h3 style="font-family:'Manrope',sans-serif; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; margin-top:16px;">All-time leaderboard</h3>
+    <div class="lb-list" style="margin-top:8px;">
+      ${lbRecords.map((r, i) => {
+        const rate = r.games ? Math.round((r.wins / r.games) * 100) : 0;
+        const isWinner = r.name === p.name;
+        return `
+          <div class="lb-row lb-rank-${i + 1} ${isWinner ? 'lb-just-played' : ''}">
+            <div class="lb-rank">${i < 3 ? medals[i] : (i + 1)}</div>
+            <div class="lb-name">${escapeHtml(r.name)}</div>
+            <div class="lb-stats">
+              <span class="lb-wins">${r.wins} ${r.wins === 1 ? 'win' : 'wins'}</span>
+              <span>${r.games} g · ${rate}% · best ${r.bestScore}</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    <button class="card-close" id="play-again">Play again</button>
+  `;
+  card.querySelector('#play-again').onclick = () => {
+    players.forEach(pl => { pl.pos = 0; pl.score = 0; });
+    currentPlayerIdx = 0;
+    skipMap = {};
+    modal.classList.remove('active');
+    renderBoard();
+    refreshScoreboard();
+    updateTurn();
+  };
+  modal.classList.add('active');
+}
+
+function nextPlayer() {
+  currentPlayerIdx = (currentPlayerIdx + 1) % players.length;
+  refreshScoreboard();
+  updateTurn();
+}
+
+// Initial empty board
+renderBoard();
+</script>
+</body>
+</html>
