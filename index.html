@@ -210,17 +210,25 @@
     bottom: 2px; right: 2px;
     display: flex; flex-wrap: wrap-reverse;
     gap: 2px;
-    max-width: 80%;
+    max-width: 90%;
   }
   .pawn {
-    width: 14px; height: 14px;
+    width: var(--pawn-size, 14px);
+    height: var(--pawn-size, 14px);
     border-radius: 50%;
     border: 1.5px solid var(--ink);
-    font-size: 8px;
+    font-size: calc(var(--pawn-size, 14px) * 0.55);
     display: flex; align-items: center; justify-content: center;
     font-weight: 700;
     color: var(--ink);
   }
+  /* Shrink pawns as more players join so they fit on the start tile */
+  body.players-5  { --pawn-size: 13px; }
+  body.players-6  { --pawn-size: 12px; }
+  body.players-7  { --pawn-size: 11px; }
+  body.players-8  { --pawn-size: 11px; }
+  body.players-9  { --pawn-size: 10px; }
+  body.players-10 { --pawn-size: 10px; }
 
   /* SIDE PANEL */
   .panel {
@@ -269,6 +277,31 @@
   }
   .color-pick {
     display: flex; gap: 6px; margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* DISCO BALL — silver metallic gradient + rainbow shimmer */
+  @keyframes discoShimmer {
+    0%   { filter: hue-rotate(0deg) brightness(1); }
+    20%  { filter: hue-rotate(72deg) brightness(1.18); }
+    40%  { filter: hue-rotate(144deg) brightness(1); }
+    60%  { filter: hue-rotate(216deg) brightness(1.18); }
+    80%  { filter: hue-rotate(288deg) brightness(1); }
+    100% { filter: hue-rotate(360deg) brightness(1); }
+  }
+  .is-disco {
+    animation: discoShimmer 2.4s linear infinite;
+    background-image:
+      radial-gradient(circle at 32% 26%, rgba(255,255,255,0.85) 0%, transparent 32%),
+      linear-gradient(135deg, #f0f0f0 0%, #909090 50%, #d8d8d8 100%) !important;
+    box-shadow: inset -1px -1px 2px rgba(0,0,0,0.25), inset 1px 1px 2px rgba(255,255,255,0.6);
+  }
+  .now-playing.is-disco-text {
+    background: linear-gradient(135deg, #888 0%, #fff 25%, #bbb 50%, #888 75%, #f0f0f0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: discoShimmer 2.4s linear infinite;
   }
   .color-pick button {
     width: 28px; height: 28px;
@@ -622,6 +655,206 @@
     background-size: 100% 100%;
     margin-top: -4px;
   }
+  /* =========================================================
+     MOBILE — phone-friendly overrides (≤700px)
+     ========================================================= */
+  @media (max-width: 700px) {
+    /* Prevent iOS double-tap zoom on interactive elements */
+    button, .tile, .answer-btn, .lb-row {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .tile, .pawn { user-select: none; -webkit-user-select: none; }
+
+    /* HEADER */
+    header {
+      margin: 0 4vw;
+      padding: 20px 0 14px;
+      gap: 12px;
+    }
+    h1 {
+      font-size: clamp(32px, 11vw, 44px);
+      line-height: 0.92;
+    }
+    .eyebrow {
+      font-size: 9px;
+      letter-spacing: 0.18em;
+    }
+    .subtitle {
+      font-size: 13px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .scribble { max-width: 220px !important; height: 10px; }
+    .legend {
+      gap: 6px;
+      width: 100%;
+    }
+    .legend-item {
+      font-size: 9px;
+      padding: 3px 6px;
+      gap: 4px;
+    }
+    .swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* MAIN LAYOUT */
+    main {
+      padding: 16px 4vw 32px;
+      gap: 14px;
+    }
+
+    /* BOARD */
+    .board-wrap {
+      padding: 18px 12px 14px;
+      border-radius: 12px;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+    .board-wrap::before {
+      font-size: 8px;
+      left: 14px;
+      letter-spacing: 0.25em;
+      top: -10px;
+      padding: 0 6px;
+    }
+    .board { gap: 3px; }
+    .tile {
+      padding: 2px;
+      border-width: 1.5px;
+      border-radius: 6px;
+    }
+    .tile-num { display: none; }
+    .tile-label { display: none; }
+    .tile-icon { font-size: 15px; }
+    .pawn {
+      width: 10px; height: 10px;
+      font-size: 6px;
+      border-width: 1px;
+    }
+    .pawns { gap: 1px; max-width: 90%; bottom: 1px; right: 1px; }
+    .tile-active {
+      box-shadow: 0 0 0 2px var(--vivid-lavender), 0 0 10px rgba(139, 47, 255, 0.5);
+    }
+    .tile:hover { transform: none; }  /* no hover lift on touch */
+
+    /* PANEL — turn off sticky on phones */
+    .panel { position: static; gap: 12px; }
+    .panel-card {
+      padding: 14px;
+      box-shadow: 3px 3px 0 var(--ink);
+      border-radius: 10px;
+    }
+    .panel-card h2 { font-size: 17px; margin-bottom: 10px; }
+    .panel-card h3 { font-size: 10px; margin-bottom: 6px; }
+
+    /* PLAYER SETUP — inputs must be ≥16px to prevent iOS zoom */
+    .player-setup input {
+      font-size: 16px;
+      padding: 10px 12px;
+    }
+    .color-pick { gap: 8px; flex-wrap: wrap; }
+    .color-pick button {
+      width: 36px; height: 36px;
+    }
+    .player-chip {
+      font-size: 13px;
+      padding: 8px 10px;
+    }
+    .player-chip .remove {
+      font-size: 18px;
+      padding: 4px 8px;
+      min-width: 32px;
+      min-height: 32px;
+    }
+
+    /* DICE */
+    .dice {
+      width: 64px; height: 64px;
+      font-size: 36px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .now-playing { font-size: 26px; }
+    .turn-info { font-size: 11px; }
+
+    /* BUTTONS */
+    .btn-primary {
+      padding: 13px 14px;
+      font-size: 12px;
+    }
+    .btn-secondary {
+      padding: 11px 12px;
+      font-size: 11px;
+    }
+
+    /* MODAL */
+    .modal-backdrop { padding: 12px; align-items: flex-start; padding-top: 5vh; }
+    .card {
+      padding: 22px 18px;
+      border-radius: 14px;
+      box-shadow: 6px 6px 0 var(--ink);
+      max-height: 90vh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      transform: rotate(0deg);  /* drop the tilt on small screens */
+    }
+    .card::before {
+      top: 8px; right: 8px; bottom: 8px; left: 8px;
+      border-radius: 10px;
+    }
+    .card-category { font-size: 9px; padding: 3px 8px; }
+    .card-question {
+      font-size: 20px;
+      margin: 14px 0 18px;
+      line-height: 1.25;
+    }
+    .answer-btn {
+      padding: 14px 12px;
+      font-size: 13px;
+      border-width: 1.5px;
+    }
+    .answer-btn .letter { font-size: 16px; }
+    .answer-btn:hover:not(:disabled) { transform: none; }
+    .card-feedback {
+      font-size: 18px;
+      margin: 10px 0;
+      min-height: 24px;
+    }
+    .card-source {
+      font-size: 10px;
+      padding-top: 8px;
+    }
+    .card-close {
+      padding: 12px 16px;
+      font-size: 12px;
+    }
+    .win-banner h2 { font-size: 34px; }
+    .win-banner p { font-size: 12px !important; }
+    .confetti { font-size: 24px; }
+
+    /* LEADERBOARD */
+    .lb-row {
+      grid-template-columns: 26px 1fr auto;
+      padding: 8px 10px;
+      font-size: 12px;
+      gap: 6px;
+    }
+    .lb-rank { font-size: 15px; }
+    .lb-name { font-size: 12px; }
+    .lb-stats { font-size: 10px; }
+    .lb-stats .lb-wins { font-size: 12px; }
+
+    /* RULES */
+    .rules { font-size: 12px; }
+    .rules ol { padding-left: 16px; }
+  }
+
+  /* Very small phones — extra squeeze for older iPhones, etc. */
+  @media (max-width: 360px) {
+    h1 { font-size: 28px; }
+    .tile-icon { font-size: 13px; }
+    .pawn { width: 8px; height: 8px; font-size: 5px; }
+    .legend-item { font-size: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -696,7 +929,7 @@
       <h2>Add players</h2>
       <div class="player-setup">
         <label>Player name</label>
-        <input type="text" id="player-name" placeholder="e.g. Lukas" maxlength="20">
+        <input type="text" id="player-name" placeholder="e.g. Anja" maxlength="20">
         <label>Pawn color</label>
         <div class="color-pick" id="color-pick"></div>
         <button class="btn-secondary" id="add-player" style="width:100%; margin-bottom:8px;">+ Add player</button>
@@ -730,7 +963,7 @@
     <div class="panel-card rules">
       <h2 style="font-size:18px;">How to play</h2>
       <ol>
-        <li>Add 2–4 players. Each picks a pawn color.</li>
+        <li>Add 2–10 players. Each picks a pawn color.</li>
         <li>On your turn, roll the dice and move that many tiles forward.</li>
         <li>The tile color tells you the card category. A card appears — answer it.</li>
         <li><strong>Correct</strong>: stay on the tile and earn 1 point. <strong>Wrong</strong>: slide back 1 tile.</li>
@@ -1263,6 +1496,10 @@ const COLORS = [
   { name: 'golden peach',   hex: '#F5B16A' },
   { name: 'dusty rose',     hex: '#D8A7B1' },
   { name: 'peach coral',    hex: '#F9B3A9' },
+  { name: 'electric blue',  hex: '#00A8FF' },
+  { name: 'pale blue',      hex: '#BFD8EE' },
+  { name: 'fluoro pink',    hex: '#FF14E0' },
+  { name: 'disco ball',     hex: 'linear-gradient(135deg, #f0f0f0 0%, #909090 50%, #d8d8d8 100%)', special: 'disco' },
 ];
 
 /* =========================================================
@@ -1284,6 +1521,7 @@ COLORS.forEach((c, i) => {
   b.style.background = c.hex;
   b.dataset.idx = i;
   b.title = c.name;
+  if (c.special === 'disco') b.classList.add('is-disco');
   if (i === 0) b.classList.add('selected');
   b.onclick = () => {
     selectedColorIdx = i;
@@ -1294,13 +1532,17 @@ COLORS.forEach((c, i) => {
 });
 
 function refreshPlayerList() {
+  // Set body class so CSS can shrink pawns when there are many players
+  document.body.className = document.body.className.replace(/\bplayers-\d+\b/g, '').trim();
+  if (players.length >= 5) document.body.classList.add('players-' + Math.min(players.length, 10));
+
   const list = document.getElementById('player-list');
   list.innerHTML = '';
   players.forEach((p, i) => {
     const chip = document.createElement('div');
     chip.className = 'player-chip';
     chip.innerHTML = `
-      <div class="dot" style="background:${p.color}"></div>
+      <div class="dot ${p.special === 'disco' ? 'is-disco' : ''}" style="background:${p.color}"></div>
       <span>${p.name}</span>
       <button class="remove" data-i="${i}" title="Remove">✕</button>
     `;
@@ -1332,7 +1574,7 @@ document.getElementById('add-player').onclick = () => {
   const input = document.getElementById('player-name');
   const name = input.value.trim();
   if (!name) { input.focus(); return; }
-  if (players.length >= 4) { alert('Max 4 players.'); return; }
+  if (players.length >= 10) { alert('Max 10 players.'); return; }
   if (players.some(p => p.colorIdx === selectedColorIdx)) {
     alert('That color is taken.'); return;
   }
@@ -1340,6 +1582,7 @@ document.getElementById('add-player').onclick = () => {
     name,
     color: COLORS[selectedColorIdx].hex,
     colorIdx: selectedColorIdx,
+    special: COLORS[selectedColorIdx].special || null,
     pos: 0,
     score: 0,
     initial: name[0].toUpperCase(),
@@ -1415,8 +1658,9 @@ function updatePawns() {
     if (slot) {
       const pawn = document.createElement('div');
       pawn.className = 'pawn';
+      if (p.special === 'disco') pawn.classList.add('is-disco');
       pawn.style.background = p.color;
-      pawn.style.color = '#fff';
+      pawn.style.color = p.special === 'disco' ? '#333' : '#fff';
       pawn.textContent = p.initial;
       slot.appendChild(pawn);
     }
@@ -1436,8 +1680,15 @@ function highlightCurrent() {
    ========================================================= */
 function updateTurn() {
   const p = players[currentPlayerIdx];
-  document.getElementById('current-name').textContent = p.name;
-  document.getElementById('current-name').style.color = p.color;
+  const nameEl = document.getElementById('current-name');
+  nameEl.textContent = p.name;
+  if (p.special === 'disco') {
+    nameEl.classList.add('is-disco-text');
+    nameEl.style.color = '';
+  } else {
+    nameEl.classList.remove('is-disco-text');
+    nameEl.style.color = p.color;
+  }
   document.getElementById('turn-info').textContent = 'Click roll to begin';
   document.getElementById('roll-btn').disabled = false;
   highlightCurrent();
@@ -1450,7 +1701,7 @@ function refreshScoreboard() {
     const chip = document.createElement('div');
     chip.className = 'player-chip' + (i === currentPlayerIdx ? ' is-active' : '');
     chip.innerHTML = `
-      <div class="dot" style="background:${p.color}"></div>
+      <div class="dot ${p.special === 'disco' ? 'is-disco' : ''}" style="background:${p.color}"></div>
       <span>${p.name}</span>
       <span class="score">${p.score} pt · tile ${p.pos}</span>
     `;
@@ -1752,7 +2003,7 @@ function showWinModal(p) {
     <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px;">
       ${ranked.map((r, i) => `
         <div class="player-chip">
-          <div class="dot" style="background:${r.color}"></div>
+          <div class="dot ${r.special === 'disco' ? 'is-disco' : ''}" style="background:${r.color}"></div>
           <span>${i + 1}. ${escapeHtml(r.name)}</span>
           <span class="score">${r.score} pt</span>
         </div>
